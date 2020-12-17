@@ -1,0 +1,20 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "4.25",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "FreeDReceivePluginSample",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "FreeDReceivePlugin",
+			"Enabled": true,
+			"MarketplaceURL": "https://vivestudios.com"
+		}
+	]
+}

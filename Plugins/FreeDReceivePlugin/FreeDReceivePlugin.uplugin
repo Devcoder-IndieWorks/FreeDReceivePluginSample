@@ -1,0 +1,27 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.10",
+	"FriendlyName": "FreeD Protocol Data Receiver",
+	"Description": "Vive Studios FreeD Protocol Data Receiver Plugin",
+	"Category": "ViveStudios",
+	"CreateBy": "Vive-Studios",
+	"CreateByURL": "https://vivestudios.com",
+	"DocsURL": "",
+	"MarketplaceURL": "https://vivestudios.com",
+	"SupportURL": "https://vivestudios.com",
+	"EnabledByDefault": false,
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "FreeDReceivePlugin",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		}
+	]
+}
