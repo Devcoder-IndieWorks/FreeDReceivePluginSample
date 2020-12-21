@@ -10,29 +10,31 @@ AVFreeDReceiveActor::AVFreeDReceiveActor( const FObjectInitializer& ObjectInitia
 
 void AVFreeDReceiveActor::BeginPlay()
 {
-    TWeakObjectPtr<AVFreeDReceiveActor> weakPtr = this;
+    Super::BeginPlay();
+
     Coroutine = MakeShareable( new FVCoFreeDReceiver( Delay, 
-        [weakPtr]( float delta ){
-            if ( weakPtr->ReceiveQueue.IsEmpty() )
+        [this]( float delta ){
+            if ( ReceiveQueue.IsEmpty() )
                 return;
 
             FString msg;
-            weakPtr->ReceiveQueue.Dequeue( msg );
+            ReceiveQueue.Dequeue( msg );
             if ( msg.IsEmpty() )
                 return;
 
-            weakPtr->IntermediateQueue.Enqueue( msg );
+            IntermediateQueue.Enqueue( msg );
+            VLOG( Log, TEXT( "#### Receiver Queue ---> Intermediate Queue. ####" ) );
         }, 
-        [weakPtr]( float delta ){
-            if ( weakPtr->IntermediateQueue.IsEmpty() )
+        [this]( float delta ){
+            if ( IntermediateQueue.IsEmpty() )
                 return;
 
             FString msg;
-            weakPtr->IntermediateQueue.Dequeue( msg );
+            IntermediateQueue.Dequeue( msg );
             if ( msg.IsEmpty() )
                 return;
 
-            if ( !weakPtr->OnFreeDReceiveEventDelegate.IsBound() )
+            if ( !OnFreeDReceiveEventDelegate.IsBound() )
                 return;
 
             FRotator rot;
@@ -49,22 +51,21 @@ void AVFreeDReceiveActor::BeginPlay()
             zoomFocus.X = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 20, 22 );
             zoomFocus.Y = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 23, 25 );
 
-            weakPtr->OnFreeDReceiveEventDelegate.Broadcast( rot, loc, zoomFocus );
+            OnFreeDReceiveEventDelegate.Broadcast( rot, loc, zoomFocus );
+            VLOG( Log, TEXT( "#### Perform FreeD received data. ####" ) );
         } ) );
 
-    if ( Coroutine.IsValid() )
-        Coroutine->Start();
-
     TickerHandle = FTicker::GetCoreTicker().AddTicker( FTickerDelegate::CreateLambda(
-        [weakPtr]( float delta ){
-            if ( weakPtr->Coroutine.IsValid() ) {
-                weakPtr->Coroutine->Execute( delta );
+        [this]( float delta ){
+            if ( Coroutine.IsValid() ) {
+                Coroutine->Execute( delta );
                 return true;
             }
             return false;
         } ) );
 
-    Super::BeginPlay();
+    if ( Coroutine.IsValid() )
+        Coroutine->Start();
 }
 
 void AVFreeDReceiveActor::EndPlay( const EEndPlayReason::Type InEndPlayReason )

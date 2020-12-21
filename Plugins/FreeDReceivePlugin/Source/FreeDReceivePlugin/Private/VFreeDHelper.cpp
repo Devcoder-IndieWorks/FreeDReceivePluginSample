@@ -2,6 +2,9 @@
 
 namespace VFreeDHelper
 {
+    static const float MultiplyRotationValue = 1.0f/32768.0f;
+    static const float MultiplyLocationValue = 1.0f/640.0f;
+
     float GetRotationValueFromHexString( const FString& InHexString, int32 InStart, int32 InEnd )
     {
         auto byteArray = GetByteArrayFromHexString( InHexString, InStart, InEnd );
@@ -51,11 +54,11 @@ namespace VFreeDHelper
 
     float ConvertRotationValue( int32 InValue )
     {
-        return ((float)InValue)/32768.0f;
+        return (float)InValue * MultiplyRotationValue;
     }
 
     float ConvertLocationValue( int32 InValue )
     {
-        return ((float)InValue)/640.0f;
+        return (float)InValue * MultiplyLocationValue;
     }
 }

@@ -1,6 +1,13 @@
 #include "VCoroutineBase.h"
 #include "VLog.h"
 
+FVCoroutineBase::FVCoroutineBase()
+    : Line(0)
+    , WaitTime(0.0f)
+    , Activate(false)
+{
+}
+
 void FVCoroutineBase::Start()
 {
     Activate = true;

@@ -5,7 +5,7 @@
 class FREEDRECEIVEPLUGIN_API FVCoroutineBase
 {
 public:
-    FVCoroutineBase() = default;
+    FVCoroutineBase();
     virtual ~FVCoroutineBase() = default;
 
     void Start();

@@ -1,9 +1,9 @@
 #include "VCoFreeDReceiver.h"
 
-FVCoFreeDReceiver::FVCoFreeDReceiver( float InDelay, TFunctionRef<void( float )> InAction, TFunctionRef<void( float )> InDelayAction )
+FVCoFreeDReceiver::FVCoFreeDReceiver( float InDelay, TFunction<void( float )>&& InAction, TFunction<void( float )>&& InDelayAction )
     : Delay( InDelay )
-    , Action( InAction )
-    , DelayAction( InDelayAction )
+    , Action( MoveTemp( InAction ) )
+    , DelayAction( MoveTemp( InDelayAction ) )
 {
 }
 

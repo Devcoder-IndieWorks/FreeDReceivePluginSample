@@ -5,13 +5,13 @@
 class FREEDRECEIVEPLUGIN_API FVCoFreeDReceiver : public FVCoroutineBase
 {
 public:
-    FVCoFreeDReceiver( float InDelay, TFunctionRef<void( float )> InAction, TFunctionRef<void( float )> InDelayAction );
+    FVCoFreeDReceiver( float InDelay, TFunction<void( float )>&& InAction, TFunction<void( float )>&& InDelayAction );
 
 protected:
     void Run( float InDeltaTime ) override;
 
 private:
     float Delay;
-    TFunctionRef<void( float )> Action;
-    TFunctionRef<void( float )> DelayAction;
+    TFunction<void( float )> Action;
+    TFunction<void( float )> DelayAction;
 };
