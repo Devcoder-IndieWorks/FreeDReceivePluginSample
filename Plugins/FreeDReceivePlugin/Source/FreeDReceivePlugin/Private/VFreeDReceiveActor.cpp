@@ -23,7 +23,7 @@ void AVFreeDReceiveActor::BeginPlay()
                 return;
 
             IntermediateQueue.Enqueue( msg );
-            VLOG( Log, TEXT( "#### Receiver Queue ---> Intermediate Queue. ####" ) );
+            VCLOG( OutputLog, Log, TEXT( "#### Receiver Queue ---> Intermediate Queue. ####" ) );
         }, 
         [this]( float delta ){
             if ( IntermediateQueue.IsEmpty() )
@@ -34,25 +34,31 @@ void AVFreeDReceiveActor::BeginPlay()
             if ( msg.IsEmpty() )
                 return;
 
-            if ( !OnFreeDReceiveEventDelegate.IsBound() )
+            if ( OnFreeDReceiveMessageDelegate.IsBound() ) {
+                OnFreeDReceiveMessageDelegate.Broadcast( msg );
+                VCLOG( OutputLog, Log, TEXT( "#### Delay received FreeD data. Delay:[%f] ####" ), Delay );
                 return;
+            }
 
-            FRotator rot;
-            rot.Roll = VFreeDHelper::GetRotationValueFromHexString( msg, 2, 4 );
-            rot.Pitch = VFreeDHelper::GetRotationValueFromHexString( msg, 5, 7 );
-            rot.Yaw = VFreeDHelper::GetRotationValueFromHexString( msg, 8, 10 );
-
-            FVector loc;
-            loc.X = VFreeDHelper::GetLocationValueFromHexString( msg, 11, 13 );
-            loc.Y = VFreeDHelper::GetLocationValueFromHexString( msg, 14, 16 );
-            loc.Z = VFreeDHelper::GetLocationValueFromHexString( msg, 17, 19 );
-
-            FVector2D zoomFocus;
-            zoomFocus.X = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 20, 22 );
-            zoomFocus.Y = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 23, 25 );
-
-            OnFreeDReceiveEventDelegate.Broadcast( rot, loc, zoomFocus );
-            VLOG( Log, TEXT( "#### Perform FreeD received data. ####" ) );
+            if ( OnFreeDReceiveEventDelegate.IsBound() ) {
+                FRotator rot;
+                rot.Roll = VFreeDHelper::GetRotationValueFromHexString( msg, 2, 4 );
+                rot.Pitch = VFreeDHelper::GetRotationValueFromHexString( msg, 5, 7 );
+                rot.Yaw = VFreeDHelper::GetRotationValueFromHexString( msg, 8, 10 );
+			    
+                FVector loc;
+                loc.X = VFreeDHelper::GetLocationValueFromHexString( msg, 11, 13 );
+                loc.Y = VFreeDHelper::GetLocationValueFromHexString( msg, 14, 16 );
+                loc.Z = VFreeDHelper::GetLocationValueFromHexString( msg, 17, 19 );
+			    
+                FVector2D zoomFocus;
+                zoomFocus.X = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 20, 22 );
+                zoomFocus.Y = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 23, 25 );
+			    
+                OnFreeDReceiveEventDelegate.Broadcast( rot, loc, zoomFocus );
+                VCLOG( OutputLog, Log, TEXT( "#### Delay received FreeD data. Delay:[%f] ####" ), Delay );
+                return;
+            }
         } ) );
 
     TickerHandle = FTicker::GetCoreTicker().AddTicker( FTickerDelegate::CreateLambda(

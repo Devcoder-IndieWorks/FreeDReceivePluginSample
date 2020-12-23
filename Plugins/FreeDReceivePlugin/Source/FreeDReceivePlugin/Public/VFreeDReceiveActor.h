@@ -17,11 +17,16 @@ protected:
 
 public:
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FVFreeDReceiveEventDelegate, FRotator, InCamRotation, FVector, InCamLocation, FVector2D, InCamZoomFocus );
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVFreeDReceiveMessageDelegate, FString, InMessage );
     UPROPERTY( BlueprintAssignable, Category="FreeDReceiveActor|Events" )
     FVFreeDReceiveEventDelegate OnFreeDReceiveEventDelegate;
+    UPROPERTY( BlueprintAssignable, Category="FreeDReceiveActor|Events" )
+    FVFreeDReceiveMessageDelegate OnFreeDReceiveMessageDelegate;
 
     UPROPERTY( EditAnywhere, Category="FreeDReceiveActor|Properties" )
     float Delay;
+    UPROPERTY( EditAnywhere, Category="FreeDReceiveActor|Properties" )
+    bool OutputLog;
 
 private:
     FDelegateHandle TickerHandle;
