@@ -4,6 +4,7 @@
 AFreeDSendActor::AFreeDSendActor( const FObjectInitializer& ObjectInitializer )
     : Super( ObjectInitializer )
 {
+    Interval = 1.0f;
 }
 
 void AFreeDSendActor::BeginPlay()
@@ -66,7 +67,9 @@ void AFreeDSendActor::StartSend( AVFreeDReceiveActor* InFreeDReceiver )
 
         auto msg = FreeDDatas[ DataCounter++ ];
         FreeDReceiver->ReceiveMessage( msg );
-    }, 0.5f, true );
+    }, Interval, true );
+
+    FreeDReceiver->StartReceive();
 }
 
 void AFreeDSendActor::StopSend()

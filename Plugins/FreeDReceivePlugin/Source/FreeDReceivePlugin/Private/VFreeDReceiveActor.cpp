@@ -6,13 +6,15 @@
 AVFreeDReceiveActor::AVFreeDReceiveActor( const FObjectInitializer& ObjectInitializer )
     : Super( ObjectInitializer )
 {
+    Delay = 1.0f;
+    Interval = 1.0f;
 }
 
 void AVFreeDReceiveActor::BeginPlay()
 {
     Super::BeginPlay();
 
-    Coroutine = MakeShareable( new FVCoFreeDReceiver( Delay, 
+    Coroutine = MakeShareable( new FVCoFreeDReceiver( Delay, Interval, 
         [this]( float delta ){
             if ( ReceiveQueue.IsEmpty() )
                 return;
@@ -25,7 +27,7 @@ void AVFreeDReceiveActor::BeginPlay()
             IntermediateQueue.Enqueue( msg );
             VCLOG( OutputLog, Log, TEXT( "#### Receiver Queue ---> Intermediate Queue. ####" ) );
         }, 
-        [this]( float delta ){
+        [this]( float elapsedTime ){
             if ( IntermediateQueue.IsEmpty() )
                 return;
 
@@ -36,7 +38,7 @@ void AVFreeDReceiveActor::BeginPlay()
 
             if ( OnFreeDReceiveMessageDelegate.IsBound() ) {
                 OnFreeDReceiveMessageDelegate.Broadcast( msg );
-                VCLOG( OutputLog, Log, TEXT( "#### Delay received FreeD data. Delay:[%f] ####" ), Delay );
+                VCLOG( OutputLog, Log, TEXT( "#### Delay received FreeD data. Elapsed time:[%f] ####" ), elapsedTime );
                 return;
             }
 
@@ -56,9 +58,12 @@ void AVFreeDReceiveActor::BeginPlay()
                 zoomFocus.Y = VFreeDHelper::GetZoomFocusValueFromHexString( msg, 23, 25 );
 			    
                 OnFreeDReceiveEventDelegate.Broadcast( rot, loc, zoomFocus );
-                VCLOG( OutputLog, Log, TEXT( "#### Delay received FreeD data. Delay:[%f] ####" ), Delay );
+                VCLOG( OutputLog, Log, TEXT( "#### Delay received FreeD data. Elapsed time:[%f] ####" ), elapsedTime );
                 return;
             }
+        }, 
+        [this]{
+            return GetWorld()->GetTimeSeconds();
         } ) );
 
     TickerHandle = FTicker::GetCoreTicker().AddTicker( FTickerDelegate::CreateLambda(
@@ -69,15 +74,11 @@ void AVFreeDReceiveActor::BeginPlay()
             }
             return false;
         } ) );
-
-    if ( Coroutine.IsValid() )
-        Coroutine->Start();
 }
 
 void AVFreeDReceiveActor::EndPlay( const EEndPlayReason::Type InEndPlayReason )
 {
-    if ( Coroutine.IsValid() )
-        Coroutine->Stop();
+    StopReceive();
 
     if ( TickerHandle.IsValid() )
         FTicker::GetCoreTicker().RemoveTicker( TickerHandle );
@@ -89,6 +90,24 @@ void AVFreeDReceiveActor::EndPlay( const EEndPlayReason::Type InEndPlayReason )
 
 void AVFreeDReceiveActor::ReceiveMessage( const FString& InMessage )
 {
-    if ( !InMessage.IsEmpty() )
+    if ( !InMessage.IsEmpty() ) {
         ReceiveQueue.Enqueue( InMessage );
+        VCLOG( OutputLog, Log, TEXT( "#### Receive Queue ####" ) );
+    }
+}
+
+void AVFreeDReceiveActor::StartReceive()
+{
+    if ( Coroutine.IsValid() ) {
+        if ( Coroutine->IsActivate() )
+            StopReceive();
+
+        Coroutine->Start();
+    }
+}
+
+void AVFreeDReceiveActor::StopReceive()
+{
+    if ( Coroutine.IsValid() )
+        Coroutine->Stop();
 }

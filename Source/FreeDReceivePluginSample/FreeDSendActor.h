@@ -17,6 +17,8 @@ protected:
     virtual void BeginPlay() override;
 
 public:
+    UPROPERTY( EditAnywhere, Category="FreeDSendActor|Properties" )
+    float Interval;
     UPROPERTY()
     class AVFreeDReceiveActor* FreeDReceiver;
 

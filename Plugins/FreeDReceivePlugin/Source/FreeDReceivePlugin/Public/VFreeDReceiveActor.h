@@ -10,6 +10,10 @@ class FREEDRECEIVEPLUGIN_API AVFreeDReceiveActor : public AActor
 public:
     UFUNCTION( BlueprintCallable, Category="FreeDReceiveActor|Function" )
     void ReceiveMessage( const FString& InMessage );
+    UFUNCTION( BlueprintCallable, Category="FreeDReceiveActor|Function" )
+    void StartReceive();
+    UFUNCTION( BlueprintCallable, Category="FreeDReceiveActor|Function" )
+    void StopReceive();
 
 protected:
     virtual void BeginPlay() override;
@@ -25,6 +29,8 @@ public:
 
     UPROPERTY( EditAnywhere, Category="FreeDReceiveActor|Properties" )
     float Delay;
+    UPROPERTY( EditAnywhere, Category="FreeDReceiveActor|Properties" )
+    float Interval;
     UPROPERTY( EditAnywhere, Category="FreeDReceiveActor|Properties" )
     bool OutputLog;
 
