@@ -32,6 +32,14 @@ Level Blueprint **BeginPlay 이벤트**에서 BP_FreeDReceiveActor가 BP_FreeDSe
 
 ![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/Test_BP_FreeDReceiveActor_Code.png)
 
+BP_FreeDSendActor의 Property인 Interval을 설정하여 설정된 간격으로 테스트용 FreeD Data를 BP_FreeDReceiveActor에 전달 한다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/BP_FreeDSendActor_Set_Property.png)
+
+BP_FreeDReceiveActor에서는 최초 일정 시간동안 대기를 위한 시간을 Delay에 설정 해 주고, 이후 일정 간격으로 BP_FreeDSendActor에서 받은 테스트용 FreeD Data를 처리할 시간을 Interval에 설정 해 준다. 추가로 UE4 Editor의 Log창에 FreeD Protocol Data Delay Receive 시스템의 로그 정보를 표시 할 지 여부를 설정 하는 Output Log 항목도 있다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/BP_FreeDReceiveActor_Set_Property.png)
+
 ### Delay 작동 방식
 
 
