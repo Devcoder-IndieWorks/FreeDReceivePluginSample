@@ -42,7 +42,37 @@ BP_FreeDReceiveActor에서는 최초 일정 시간동안 대기를 위한 시간
 
 ### Delay 작동 방식
 
+BP_FreeDSendActor에서 StartSend() 함수를 실행하면 FreeDatas에 저장되어 있는 테스트용 FreeD Data를 UE4 WorldTimer를 이용하여 Interval 간격으로 BP_FreeDReceiveActor에게 보낸다.
 
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/AFreeDSendActor_StartSend.png)
+
+(1)번이 WorldTimer를 설정하는 부분이고, (2)번이 Interval 간격으로 FreeD Data를 BP_FreeDReceiveActor에서 전달 하는 부분이다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/AVFreeDReceiveActor_ReceiveMessage.png)
+
+BP_FreeDReceiveActor는 ReceiveMessage() 함수를 통해 전달 받은 테스트용 FreeD Data를 ReceiveQueue에 저장한다.
+
+BP_FreeDSendActor의 StartSend() 함수에서  (3)번의 StartReceive() 함수는 최초 일정 시간 Delay와 Delay 후 Interval 간격으로 처리하기 위한 Co Routine 기능이 실행 되도록 한다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/AVFreeDReceiveActor_StartReceive.png)
+
+Delay와 Interval 간격 동안 처리를 담당하는 Co Routine을 설정하는 부분은 BP_FreeDReceiveActor의 BeginPlay() 함수에서 한다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/AVFreeDReceiveActor_Begin.png)
+
+Co Routine 설정은 C++ Lambda 함수로 설정한다.
+
+(1)번 Lambda 함수는 BP_FreeDSendActor로부터 전달 받은 테스트용 FreeD Data를 저장한 Queue에서 Interval 간격으로 처리하는 곳에서 사용하는 Queue로 데이터를 매프레임 하나씩 옮기는 처리를 한다.
+
+(2)번 Lambda 함수는 Interval마다 실행 되는 부분으로 (1)에서 옮겨져 저장된 Queue(IntermediateQueue)에서 하나씩 가져와 Blueprint에서 설정한 Delegate에 전달하여 처리 되도록 한다.
+
+(3)번 Lambda 함수는 (2)번의 매개변수인 elapsedTime을 계산하기 위해 UE4의 현재 시간(초단위)을 얻어오는 함수를 호출 한다.
+
+(4)번은 (1) ~ (3)  내용으로 설정되어 생성된 Co Routine을 실행하기 위해 UE4의 CoreTicker에 추가한다.
+
+마지막으로 BP_FreeDSendActor의 StopSend() 함수를 호출하여 WorldTimer를 제거하면 테스트용 FreeD Data 전달이 중단 된다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/AFreeDSendActor_StopSend.png)
 
 ## Delay 처리를 위한 Co Routine System 구현
 
