@@ -76,3 +76,20 @@ Co Routine 설정은 C++ Lambda 함수로 설정한다.
 
 ## Delay 처리를 위한 Co Routine System 구현
 
+엄밀히 말하면 Co Routine과 비슷하게 동작하도록 C 프로그래밍의 트릭을 이용하여 구현하였다. Co Routine 처럼 내부 스택 정보를 보관하지 않으며, 단지 함수 내 특정 부분에서 함수를 빠져 나올 수 있으며, 다시 함수에 진입시 이전에 함수에서 빠져 나온 부분에서부터 처리가 되도록 하는 것만 같다고 할 수 있다. 이런 점 때문에 Co Routine이라고는 하였지만, 정확하게는 Co Routine은 아닌것이다.
+
+그럼 함수에서 임의의 위치에서 리턴되고, 다시 함수에 진입시 이전에 리턴된 부분부터 함수가 처리 되도록 하는 방법에 대해 설명한다.
+
+Co Routine처럼 작동하는 기능을 구현하기 위해 **FVCoroutineBase** 클래스와 **FVCoroutineRef** 클래스를 만든다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/Coroutine_Classes.png)
+
+**FVCoroutineBase**는 Co Routine처럼 작동할 수 있는 기능을 구현 할 수 있도록 해주기 위한 기반 클래스로써 나중에 다시 설명하겠지만, 가상 함수인 Run() 함수를 재정의해서 그곳에 Co Routine처럼 작동하도록 하는 코드를 구현 할 수 있도록 해준다.
+
+**FVCoroutineRef**는 Co Routine에서 함수의 임의의 지점에서 리턴 되고, 다시 함수에 진입시 이전에 리턴된 지점에서 시작 할 수 있도록 하기 위한 리턴 지점에 대한 정보와 Co Routine에서 함수 재진입 시간을 설정해서 처리 하는 것과 같은 역할을 하는 기능에 필요한 대기 시간에 대한 정보를 저장하는 기능을 담당한다.
+
+C 프로그래밍의 매크로 기법은 트릭을 사용 할 수 있도록 해주는 도구로써 장점을 가지고 있다. 물론 장정보다 단점이 많긴 하지만 어떻게 사용하는지에 따라서 장점으로도 사용 할 수 있기 때문이다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/Coroutine_Macro.png)
+
+Co Routine처럼 함수에서 임의의 위치에서 리턴 되고 다시 진입시 리턴된 부분부터 처리 되도록 하기 위해서는 리턴될 때 리턴 된 지점을 저장해 두어야 한다. 코드의 라인 위치를 알아 내는 매크로가 **LINE** 매크로이다. 이 매크로를 이용해서 리턴 된 지점을 저장하는 기능을 구현 할 수 있다.
