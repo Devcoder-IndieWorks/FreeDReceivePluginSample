@@ -92,4 +92,43 @@ C 프로그래밍의 매크로 기법은 트릭을 사용 할 수 있도록 해�
 
 ![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/Coroutine_Macro.png)
 
-Co Routine처럼 함수에서 임의의 위치에서 리턴 되고 다시 진입시 리턴된 부분부터 처리 되도록 하기 위해서는 리턴될 때 리턴 된 지점을 저장해 두어야 한다. 코드의 라인 위치를 알아 내는 매크로가 **LINE** 매크로이다. 이 매크로를 이용해서 리턴 된 지점을 저장하는 기능을 구현 할 수 있다.
+Co Routine처럼 함수에서 임의의 위치에서 리턴 되고 다시 진입시 리턴된 부분부터 처리 되도록 하기 위해서는 리턴될 때 리턴 된 지점을 저장해 두어야 한다. 코드의 라인 위치를 알아 내는 매크로가 **__LINE__** 매크로이다. 이 매크로를 이용해서 리턴 된 지점을 저장하는 기능을 구현 할 수 있다. 또한 C 프로그래밍의 switch 구문의 특징을 함께 이용해서 재진입시 이전에 리턴된 지점에서 시작할 수 있도록 처리한다.
+
+### Macro들에 대해
+
+**VCoroutineReEnter** : 함수 진입시 이전에 리턴된 지점으로 점프해서 처리 되도록 하는 역할을 한다. switch 구문을 이용하고  FVCoroutineRef 인스턴스를 생성한다. FVCoroutineRef 인스턴스는 uint32 타입으로 형변환 할 수 있는 operator 함수를 가지고 있으며 이 형변환은 이전에 리턴된 지점에 대한 코드 라인 정보로 변환된다.(최초 진입시에는 0으로 변환된다.)
+
+**VCoroutineEntry** : 최초 Co Routine 진입시에 대한 처리 및 임의의 지점에서 리턴하는 처리를 한다. Co Routine이 적용된 함수가 처음으로 호출되어 처리되면 **FVCoroutineRef인 CoRef**는 0으로 변환되고 매크로에 정의된 **case 0:** 구문을 호출하게 된다. 이후 다시 함수에 진입시에는 더 이상 **case 0:** 구문은 호출되지 않는다. 그리고 함수의 임의의 지점에서 리턴하는 코드는 **BailOutOfCoroutine:**에서 처리하는데, **C의 goto 문**으로 처리된다. 매크로의 이름처럼 최초 시작시에 대한 처리와 리턴에 대한 처리를 전담하는 매크로이다.
+
+**VCoroutineBegin** : Co Routine 구문 시작에 대한 코드 정의를 위한 매크로이다. for문을 이용해서 한번만 매크로 다음에 정의한 구문이 호출되게 하고, 그 다음은 매크로가 정의된 함수에서 리턴할 수 있도록 **goto BailOutOfCoroutine**를 실행한다.
+
+**VCoroutineEnd** : VCoroutineBegin 매크로 쌍으로 사용하는 매크로이다. 내용은 특별할 것은 없고,  VCoroutineBegin 매크로에서 정의한 for문의 닫을 **}**를 정의한다.
+
+**VCoroutineNull( wait )/VCoroutineStatement( wait, statement )** : VCoroutineNull 매크로는 시간 설정에 대한 wait 구문을 실행하고 함수에서 리턴하는 코드를 적용한다. VCoroutineStatement 매크로는 시간 설정에 대한 wait 구문뿐만 아니라, 다른 상태처리에 대한 구문을 실행하고 함수에서 리턴하는 코드를 적용한다. 이 두 매크로는 직접으로 사용하기보다는 다음에 설명하는 매크로들에서 공통으로 사용하는 코드를 위해 사용된다.
+
+**VCoYieldNullBegin** : VCoroutineReEnter 매크로의 switch에서 CoRef의 uint32 operator 함수의 코드 라인 번호 평가 따라 선택될 case 문을 정의한다. Co Routine이 작동하는 방식을 생각해 보면, VCoYieldNullBegin 매크로 만나게 되면 **CoRef에 현재 코드 라인**을 설정 해 주고,  매크로 다음에 정의한 구문을 처리할 것이다. 그 후 임의의 지점에서 리턴한 후 다시 진입시 if문안에 정의한 **case __LINE__:** 으로 건너띄어 호출되고 함수의 다음 부분부터 실행하게 된다. 이러한 프로그래밍 트릭은 C의 switch문의 특징(?)을 이용한 프로그래밍 방식이다.
+
+**VCoYieldNullEnd** : VCoroutineEnd와 마찬가지로 닫을 **}**를 정의한다.
+
+**VCoYieldReturnNull/VCoYieldReturnNullStatement( statement )** : 위에서 정의한 VCoroutineBegin/VCoroutineEnd 매크로 쌍을 이용하여 이 매크로가 선언된 함수 내 위치에서 이전까지 구현된 내용을 한번 처리하고, 매크로가 선언된 위치에서 리턴하는 역할을 한다. 그리고 다시 함수에 재진입시 VCoroutineReEnter 매크로가 선언된 위치에서부터 이 매크로 선언된 위치에 구현된 내용은 건너띄고, 이후 내용부터 처리되게 한다. 이 매크로는 대기 시간 없이 한번은 구현내용이 처리 되고, 한번은 리턴하는 식으로 작동한다.
+
+**VCoYieldWaitBegin/VCoYieldReturnWait( wait )/VCoYieldReturnWaitStatement( wait, statement )** : 위에 정의한 매크로 기능에 일정시간 동안 대기를 하도록 하는 기능을 추가한 매크로이다. CoRef.HasWaiting() 함수를 통해  지정된 시간동안 매크로가 선언된 위치 이후에 구현된 내용을 처리 하지 못하도록 막는 역할을 한다.
+
+### Delay 처리를 위한 기반 클래스 구현
+
+Co Routine관련 매크로들을 이용하여 Delay 처리를 하기 위한 클래스를 구현한다. FVCoFreeDReceiver 클래스는 FVCoroutineBase 클래스를 상속하고 Run() 함수를 override 한다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/Use_Coroutine.png)
+
+Run() 함수를 override한 내용은 다음 그림과 같다.
+
+![](https://github.com/Devcoder-IndieWorks/FreeDReceivePluginSample/blob/master/Images/Use_Coroutine_Implementation.png)
+
+(1)번 항목이 매크로를 이용하여  Co Routine처럼 작동할 부분에 대한 범위를 설정해 준다. (2-1)번은 Run() 함수 시작시 Delay를 주기 위해 VCoYieldReturnWait() 매크로를 사용하여 그 위치에서 지정된 시간만큼 대기 처리를 한다. (2-2)번은 while 문안에서 Interval 간격만큼 대기 처리를 한다.
+
+(3-1)번의 Action 함수는 매프레임 호출된다. (3-2)번 DelayAction 함수는 밑에 선언된 VCoYieldReturnWait에 설정된 Interval 단위로 실행된다.
+
+Run() 함수의 실행 흐름은 (3-1)은 매프레임 호출되는 Run() 함수에 따라 호출되고, (1)번 항목에서 VCoroutineReEnter에서 switch문에서 평가한 코드 라인으로 건너띈다. Run() 함수가 최초 처음 호출이면 VCoroutineEntry: 매크로가 선언된 위치에서부터 실행된다. 그리고 (2-1)번 항목에서 Delay 만큼 대기를 하기 위해 (2-1)번 위치에서 goto문이 호출되어 VCoroutineEntry로 코드 호출이 일어나고(goto BailOutOfCoroutine) 그 위치에서 Run() 함수에서 리턴한다. Delay 만큼 시간이 지나게 되면 그 이후 코드가 실행되고, (2-2)번 항목인 VCoYieldReturnWait에서 Interval만큼 대기를 하기 위해 (2-2)번 위치에서 goto문이 호출되어 VCoroutineEntry로 코드 호출이 일어난다.  Run() 함수 재진입시 (1)번 항목인 VCoroutineReEnter에서 switch문으로 코드 라인을 평가하여 (2-2)번 항목으로 건너띄어 다시 Interval 만큼 시간이 지났는지 확인 후 무한 루프인 while문 내 구현된 내용들을 처리한다.
+
+무한 루프인 while문이지만, 코드는 매프레임 리턴하게 된다. 그리고 (2-1)번과 바로 밑에 구현된 내용은 한번만 호출되고 이후에는 호출되지 않는다.
+
